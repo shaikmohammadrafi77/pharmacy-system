@@ -1,7 +1,16 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+const signToken = (id) => {
+  const jwtSecret = process.env.JWT_SECRET;
+  const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '7d';
+
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET is not defined in the environment');
+  }
+
+  return jwt.sign({ id }, jwtSecret, { expiresIn: jwtExpiresIn });
+};
 
 exports.register = async (req, res) => {
   try {
