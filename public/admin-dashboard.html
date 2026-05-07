@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - PharmaCare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { --green: #1a8f4e; --dark-green: #0d5c32; }
+    body { background: #f5f6fa; }
+    .sidebar { width: 260px; min-height: 100vh; background: linear-gradient(180deg, var(--green) 0%, var(--dark-green) 100%); position: fixed; top: 0; left: 0; z-index: 100; transition: all 0.3s; }
+    .sidebar-brand { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .sidebar-nav .nav-link { color: rgba(255,255,255,0.85); padding: 12px 20px; border-radius: 8px; margin: 2px 10px; transition: all 0.2s; }
+    .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+    .sidebar-nav .nav-link i { width: 22px; }
+    .main-content { margin-left: 260px; padding: 20px; }
+    .topbar { background: #fff; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--green); }
+    .stat-icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .section { display: none; }
+    .section.active { display: block; }
+    .badge-low { background: #fee2e2; color: #dc2626; }
+    .table th { background: #f8f9fa; font-weight: 600; font-size: 13px; }
+    .btn-green { background: var(--green); color: #fff; border: none; }
+    .btn-green:hover { background: var(--dark-green); color: #fff; }
+    @media(max-width:768px) { .sidebar { width: 0; overflow: hidden; } .main-content { margin-left: 0; } }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand text-white">
+      <i class="fas fa-pills fa-lg me-2"></i>
+      <span class="fw-bold fs-5">PharmaCare</span>
+      <div class="small opacity-75 mt-1">Admin Panel</div>
+    </div>
+    <ul class="sidebar-nav nav flex-column mt-3">
+      <li class="nav-item"><a class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showSection('medicines')"><i class="fas fa-capsules me-2"></i>Medicines</a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showSection('orders')"><i class="fas fa-shopping-cart me-2"></i>Orders</a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showSection('prescriptions')"><i class="fas fa-file-medical me-2"></i>Prescriptions</a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showSection('users')"><i class="fas fa-users me-2"></i>Users</a></li>
+      <li class="nav-item mt-3"><a class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="topbar">
+      <div><h5 class="mb-0 fw-bold" id="pageTitle">Dashboard</h5></div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success" id="adminName"></span>
+        <i class="fas fa-user-circle fa-2x text-success"></i>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="section active" id="section-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-muted small">Total Medicines</div>
+                <div class="fs-3 fw-bold" id="totalMedicines">0</div>
+              </div>
+              <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-pills text-success fa-lg"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card" style="border-left-color:#3b82f6">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-muted small">Total Orders</div>
+                <div class="fs-3 fw-bold" id="totalOrders">0</div>
+              </div>
+              <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-shopping-cart text-primary fa-lg"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card" style="border-left-color:#f59e0b">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-muted small">Total Customers</div>
+                <div class="fs-3 fw-bold" id="totalCustomers">0</div>
+              </div>
+              <div class="stat-icon bg-warning bg-opacity-10"><i class="fas fa-users text-warning fa-lg"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card" style="border-left-color:#8b5cf6">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-muted small">Total Revenue</div>
+                <div class="fs-3 fw-bold">₹<span id="totalRevenue">0</span></div>
+              </div>
+              <div class="stat-icon bg-purple bg-opacity-10" style="background:#f3e8ff"><i class="fas fa-rupee-sign fa-lg" style="color:#8b5cf6"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-8">
+          <div class="card p-3">
+            <h6 class="fw-bold mb-3"><i class="fas fa-chart-bar me-2 text-success"></i>Monthly Sales</h6>
+            <canvas id="salesChart" height="120"></canvas>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3">
+            <h6 class="fw-bold mb-3"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Low Stock Alert</h6>
+            <div id="lowStockList"><p class="text-muted small">Loading...</p></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card p-3">
+            <h6 class="fw-bold mb-3"><i class="fas fa-clock me-2 text-success"></i>Recent Orders</h6>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody id="recentOrdersTable"><tr><td colspan="5" class="text-center text-muted">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medicines Section -->
+    <div class="section" id="section-medicines">
+      <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0">Manage Medicines</h6>
+          <button class="btn btn-green btn-sm" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+            <i class="fas fa-plus me-1"></i>Add Medicine
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Prescription</th><th>Actions</th></tr></thead>
+            <tbody id="medicinesTable"><tr><td colspan="6" class="text-center text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div class="section" id="section-orders">
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3">All Orders</h6>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Update</th></tr></thead>
+            <tbody id="allOrdersTable"><tr><td colspan="6" class="text-center text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prescriptions Section -->
+    <div class="section" id="section-prescriptions">
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3">All Prescriptions</h6>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Customer</th><th>Upload Date</th><th>Status</th><th>Image</th></tr></thead>
+            <tbody id="prescriptionsTable"><tr><td colspan="4" class="text-center text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Section -->
+    <div class="section" id="section-users">
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3">All Users</h6>
+        <p class="text-muted">User management coming soon.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Medicine Modal -->
+  <div class="modal fade" id="addMedicineModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add Medicine</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Medicine Name</label><input type="text" id="medName" class="form-control"></div>
+          <div class="mb-3"><label class="form-label">Category</label><input type="text" id="medCategory" class="form-control"></div>
+          <div class="row g-2 mb-3">
+            <div class="col"><label class="form-label">Price (₹)</label><input type="number" id="medPrice" class="form-control"></div>
+            <div class="col"><label class="form-label">Stock</label><input type="number" id="medStock" class="form-control"></div>
+          </div>
+          <div class="mb-3"><label class="form-label">Description</label><textarea id="medDesc" class="form-control" rows="2"></textarea></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="medRx"><label class="form-check-label">Requires Prescription</label></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-green btn-sm" onclick="addMedicine()">Add Medicine</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token || user.role !== 'admin') window.location.href = '/';
+
+    document.getElementById('adminName').textContent = user.name || 'Admin';
+    let salesChart;
+
+    function showSection(name) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById('section-' + name).classList.add('active');
+      document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+      event.target.classList.add('active');
+      if (name === 'medicines') loadMedicines();
+      if (name === 'orders') loadAllOrders();
+      if (name === 'prescriptions') loadPrescriptions();
+    }
+
+    function logout() { localStorage.clear(); window.location.href = '/'; }
+
+    const headers = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token });
+
+    async function loadDashboard() {
+      const res = await fetch('/api/dashboard/admin-stats', { headers: headers() });
+      const data = await res.json();
+      document.getElementById('totalMedicines').textContent = data.totalMedicines;
+      document.getElementById('totalOrders').textContent = data.totalOrders;
+      document.getElementById('totalCustomers').textContent = data.totalCustomers;
+      document.getElementById('totalRevenue').textContent = data.totalRevenue.toLocaleString();
+
+      // Low stock
+      const lowStockDiv = document.getElementById('lowStockList');
+      if (data.lowStock.length === 0) { lowStockDiv.innerHTML = '<p class="text-success small">All medicines are well stocked!</p>'; }
+      else { lowStockDiv.innerHTML = data.lowStock.map(m => `<div class="d-flex justify-content-between mb-2"><span class="small">${m.name}</span><span class="badge badge-low">${m.stock} left</span></div>`).join(''); }
+
+      // Recent orders
+      document.getElementById('recentOrdersTable').innerHTML = data.recentOrders.map(o => `
+        <tr><td><span class="small text-muted">#${o._id.toString().slice(-6)}</span></td>
+        <td>${o.customerId?.name || 'N/A'}</td>
+        <td>₹${o.totalAmount}</td>
+        <td><span class="badge bg-${statusColor(o.status)}">${o.status}</span></td>
+        <td>${new Date(o.orderDate).toLocaleDateString()}</td></tr>`).join('');
+
+      // Chart
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const labels = data.monthlySales.map(m => months[m._id.month - 1]);
+      const values = data.monthlySales.map(m => m.total);
+      if (salesChart) salesChart.destroy();
+      salesChart = new Chart(document.getElementById('salesChart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Revenue (₹)', data: values, backgroundColor: 'rgba(26,143,78,0.7)', borderRadius: 6 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    async function loadMedicines() {
+      const res = await fetch('/api/medicines');
+      const meds = await res.json();
+      document.getElementById('medicinesTable').innerHTML = meds.length === 0 ? '<tr><td colspan="6" class="text-center text-muted">No medicines found</td></tr>' :
+        meds.map(m => `<tr>
+          <td>${m.name}</td><td>${m.category}</td><td>₹${m.price}</td>
+          <td><span class="badge ${m.stock < 10 ? 'bg-danger' : 'bg-success'}">${m.stock}</span></td>
+          <td>${m.requiresPrescription ? '<span class="badge bg-warning">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteMedicine('${m._id}')"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('');
+    }
+
+    async function addMedicine() {
+      const body = {
+        name: document.getElementById('medName').value,
+        category: document.getElementById('medCategory').value,
+        price: +document.getElementById('medPrice').value,
+        stock: +document.getElementById('medStock').value,
+        description: document.getElementById('medDesc').value,
+        requiresPrescription: document.getElementById('medRx').checked,
+      };
+      await fetch('/api/medicines', { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+      bootstrap.Modal.getInstance(document.getElementById('addMedicineModal')).hide();
+      loadMedicines();
+    }
+
+    async function deleteMedicine(id) {
+      if (!confirm('Delete this medicine?')) return;
+      await fetch('/api/medicines/' + id, { method: 'DELETE', headers: headers() });
+      loadMedicines();
+    }
+
+    async function loadAllOrders() {
+      const res = await fetch('/api/orders', { headers: headers() });
+      const orders = await res.json();
+      document.getElementById('allOrdersTable').innerHTML = orders.length === 0 ? '<tr><td colspan="6" class="text-center text-muted">No orders found</td></tr>' :
+        orders.map(o => `<tr>
+          <td><small>#${o._id.toString().slice(-6)}</small></td>
+          <td>${o.customerId?.name || 'N/A'}</td>
+          <td>₹${o.totalAmount}</td>
+          <td><span class="badge bg-${statusColor(o.status)}">${o.status}</span></td>
+          <td>${new Date(o.orderDate).toLocaleDateString()}</td>
+          <td>
+            <select class="form-select form-select-sm" onchange="updateStatus('${o._id}', this.value)">
+              ${['pending','processing','shipped','delivered','cancelled'].map(s => `<option ${s===o.status?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function updateStatus(id, status) {
+      await fetch('/api/orders/' + id + '/status', { method: 'PUT', headers: headers(), body: JSON.stringify({ status }) });
+    }
+
+    async function loadPrescriptions() {
+      const res = await fetch('/api/prescriptions', { headers: headers() });
+      const data = await res.json();
+      document.getElementById('prescriptionsTable').innerHTML = data.length === 0 ? '<tr><td colspan="4" class="text-center text-muted">No prescriptions</td></tr>' :
+        data.map(p => `<tr>
+          <td>${p.customerId?.name || 'N/A'}</td>
+          <td>${new Date(p.uploadDate).toLocaleDateString()}</td>
+          <td><span class="badge bg-${p.status==='approved'?'success':p.status==='rejected'?'danger':'warning'}">${p.status}</span></td>
+          <td><a href="/uploads/${p.image}" target="_blank" class="btn btn-sm btn-outline-success">View</a></td>
+        </tr>`).join('');
+    }
+
+    function statusColor(s) { return s==='delivered'?'success':s==='cancelled'?'danger':s==='shipped'?'info':s==='processing'?'primary':'warning'; }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

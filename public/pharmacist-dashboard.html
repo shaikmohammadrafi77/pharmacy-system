@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacist Dashboard - PharmaCare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root { --green: #1a8f4e; --dark-green: #0d5c32; }
+    body { background: #f5f6fa; }
+    .sidebar { width: 260px; min-height: 100vh; background: linear-gradient(180deg, #1565c0 0%, #0d3b7a 100%); position: fixed; top: 0; left: 0; z-index: 100; }
+    .sidebar-brand { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .sidebar-nav .nav-link { color: rgba(255,255,255,0.85); padding: 12px 20px; border-radius: 8px; margin: 2px 10px; transition: all 0.2s; }
+    .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+    .main-content { margin-left: 260px; padding: 20px; }
+    .topbar { background: #fff; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .section { display: none; }
+    .section.active { display: block; }
+    .table th { background: #f8f9fa; font-weight: 600; font-size: 13px; }
+    .btn-blue { background: #1565c0; color: #fff; border: none; }
+    .btn-blue:hover { background: #0d3b7a; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-brand text-white">
+      <i class="fas fa-user-md fa-lg me-2"></i>
+      <span class="fw-bold fs-5">PharmaCare</span>
+      <div class="small opacity-75 mt-1">Pharmacist Panel</div>
+    </div>
+    <ul class="sidebar-nav nav flex-column mt-3">
+      <li><a class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+      <li><a class="nav-link" onclick="showSection('prescriptions')"><i class="fas fa-file-medical me-2"></i>Prescriptions</a></li>
+      <li><a class="nav-link" onclick="showSection('stock')"><i class="fas fa-capsules me-2"></i>Stock Management</a></li>
+      <li class="mt-3"><a class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <h5 class="mb-0 fw-bold" id="pageTitle">Dashboard</h5>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-primary" id="pharmaName"></span>
+        <i class="fas fa-user-md fa-2x text-primary"></i>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="section active" id="section-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="stat-card border-start border-warning border-4">
+            <div class="text-muted small">Pending Prescriptions</div>
+            <div class="fs-3 fw-bold text-warning" id="pendingCount">0</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card border-start border-success border-4">
+            <div class="text-muted small">Approved by Me</div>
+            <div class="fs-3 fw-bold text-success" id="approvedCount">0</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card border-start border-danger border-4">
+            <div class="text-muted small">Low Stock Items</div>
+            <div class="fs-3 fw-bold text-danger" id="lowStockCount">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3"><i class="fas fa-clock me-2 text-warning"></i>Pending Prescriptions</h6>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Customer</th><th>Upload Date</th><th>Image</th><th>Action</th></tr></thead>
+            <tbody id="pendingTable"><tr><td colspan="4" class="text-center text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prescriptions -->
+    <div class="section" id="section-prescriptions">
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3">All Prescriptions</h6>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Customer</th><th>Date</th><th>Status</th><th>Image</th><th>Action</th></tr></thead>
+            <tbody id="allPrescTable"><tr><td colspan="5" class="text-center text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock -->
+    <div class="section" id="section-stock">
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Low Stock Medicines</h6>
+        <div id="stockList"><p class="text-muted">Loading...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token || user.role !== 'pharmacist') window.location.href = '/';
+    document.getElementById('pharmaName').textContent = user.name || 'Pharmacist';
+
+    function logout() { localStorage.clear(); window.location.href = '/'; }
+    const headers = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token });
+
+    function showSection(name) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById('section-' + name).classList.add('active');
+      document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+      event.target.classList.add('active');
+      if (name === 'prescriptions') loadAllPrescriptions();
+      if (name === 'stock') loadStock();
+    }
+
+    async function loadDashboard() {
+      const res = await fetch('/api/dashboard/pharmacist-stats', { headers: headers() });
+      const data = await res.json();
+      document.getElementById('pendingCount').textContent = data.pendingPrescriptions.length;
+      document.getElementById('approvedCount').textContent = data.approvedPrescriptions.length;
+      document.getElementById('lowStockCount').textContent = data.lowStock.length;
+      document.getElementById('pendingTable').innerHTML = data.pendingPrescriptions.length === 0 ?
+        '<tr><td colspan="4" class="text-center text-success">No pending prescriptions!</td></tr>' :
+        data.pendingPrescriptions.map(p => `<tr>
+          <td>${p.customerId?.name || 'N/A'}</td>
+          <td>${new Date(p.uploadDate).toLocaleDateString()}</td>
+          <td><a href="/uploads/${p.image}" target="_blank" class="btn btn-sm btn-outline-primary">View</a></td>
+          <td>
+            <button class="btn btn-success btn-sm me-1" onclick="verify('${p._id}','approved')"><i class="fas fa-check"></i> Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="verify('${p._id}','rejected')"><i class="fas fa-times"></i> Reject</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function verify(id, status) {
+      await fetch('/api/prescriptions/' + id + '/verify', { method: 'PUT', headers: headers(), body: JSON.stringify({ status }) });
+      loadDashboard();
+    }
+
+    async function loadAllPrescriptions() {
+      const res = await fetch('/api/prescriptions', { headers: headers() });
+      const data = await res.json();
+      document.getElementById('allPrescTable').innerHTML = data.map(p => `<tr>
+        <td>${p.customerId?.name || 'N/A'}</td>
+        <td>${new Date(p.uploadDate).toLocaleDateString()}</td>
+        <td><span class="badge bg-${p.status==='approved'?'success':p.status==='rejected'?'danger':'warning'}">${p.status}</span></td>
+        <td><a href="/uploads/${p.image}" target="_blank" class="btn btn-sm btn-outline-primary">View</a></td>
+        <td>${p.status==='pending'?`<button class="btn btn-success btn-sm me-1" onclick="verify('${p._id}','approved')">Approve</button><button class="btn btn-danger btn-sm" onclick="verify('${p._id}','rejected')">Reject</button>`:'—'}</td>
+      </tr>`).join('');
+    }
+
+    async function loadStock() {
+      const res = await fetch('/api/medicines');
+      const meds = await res.json();
+      const low = meds.filter(m => m.stock < 10);
+      document.getElementById('stockList').innerHTML = low.length === 0 ?
+        '<p class="text-success">All medicines are well stocked!</p>' :
+        `<table class="table"><thead><tr><th>Medicine</th><th>Category</th><th>Stock</th></tr></thead><tbody>${low.map(m=>`<tr><td>${m.name}</td><td>${m.category}</td><td><span class="badge bg-danger">${m.stock}</span></td></tr>`).join('')}</tbody></table>`;
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
